@@ -418,7 +418,7 @@ static struct PyModuleDef moduledef = {
     };
 
 PyMODINIT_FUNC
-initaudiospeex(void)
+PyInit_audiospeex(void)
 {
     PyObject *m;
     
@@ -437,6 +437,6 @@ initaudiospeex(void)
     
     Py_INCREF(&StateType);
     PyModule_AddObject(m, "State", (PyObject *)&StateType);
-	return NULL;
+	return m;
 }
 

@@ -127,7 +127,7 @@ static struct PyModuleDef moduledef = {
     };
 
 PyMODINIT_FUNC
-initaudiotts(void)
+PyInit_audiotts(void)
 {
     PyObject *m;
     
@@ -147,6 +147,6 @@ initaudiotts(void)
     ModuleError = PyErr_NewException("audiotts.error", NULL, NULL);
     Py_INCREF(ModuleError);
     PyModule_AddObject(m, "error", ModuleError);
-	return NULL;
+	return m;
 }
 

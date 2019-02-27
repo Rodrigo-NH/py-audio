@@ -1,8 +1,8 @@
 #
 #https://stackoverflow.com/questions/19768267/relocation-r-x86-64-32s-against-linking-error
 # https://github.com/pytorch/ELF/issues/98
-from distutils.core import setup, Extension
-#from setuptools import setup, Extension
+#from distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 
 

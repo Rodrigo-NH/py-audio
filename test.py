@@ -1,15 +1,16 @@
 import time, sys, traceback
 try:
-    import audiodev, audiospeex
+    import audiodev
+    import audiospeex
 except:
-    print 'cannot load audiodev.so and audiospeex.so, please set the PYTHONPATH'
+    print ('cannot load audiodev.so and audiospeex.so, please set the PYTHONPATH')
     traceback.print_exc()
     sys.exit(-1)
     
 # capabilities
 
-print audiodev.get_api_name()
-print audiodev.get_devices()
+print (audiodev.get_api_name())
+print (audiodev.get_devices())
 
 upsample = downsample = enc = dec = None
 
@@ -32,7 +33,7 @@ def inout(fragment, timestamp, userdata):
     except KeyboardInterrupt:
         pass
     except:
-        print traceback.print_exc()
+        print (traceback.print_exc())
         return ""
 
 audiodev.open(output="default", input="default",

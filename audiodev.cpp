@@ -412,7 +412,7 @@ static struct PyModuleDef moduledef = {
     };
 
 PyMODINIT_FUNC
-initaudiodev(void)
+PyInit_audiodev(void)
 {
     PyObject *m;
     
@@ -428,5 +428,6 @@ initaudiodev(void)
     ModuleError = PyErr_NewException("audiodev.error", NULL, NULL);
     Py_INCREF(ModuleError);
     PyModule_AddObject(m, "error", ModuleError);
+    return m;
 }
 

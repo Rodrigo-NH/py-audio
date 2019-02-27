@@ -1,6 +1,4 @@
-STATUS: Actually 'setup.py' builds without errors (.ccp files needs review) but having trouble importing the modules  
-SO  
-NOT TESTED  
+Port to Python3
 
 
 # Python bindings for audio device and speex codecs #
