@@ -1,4 +1,4 @@
-STATUS: Actually 'setup.py' builds without errors but having trouble importing the modules  
+STATUS: Actually 'setup.py' builds without errors (.ccp files needs review) but having trouble importing the modules  
 SO  
 NOT TESTED  
 
