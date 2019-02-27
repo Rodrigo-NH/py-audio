@@ -46,7 +46,7 @@ pyaudio_tts(PyObject* self, PyObject* args, PyObject* kwargs)
     
     cst_wave *wave;
     cst_voice *voice;
-    int i, nsamples;
+    /* int i, nsamples; */
     
     if (strcmp(name, "default") == 0) {
         voice = flite_voice_select(NULL);
@@ -66,7 +66,7 @@ pyaudio_tts(PyObject* self, PyObject* args, PyObject* kwargs)
         cst_wave_resample(wave, sample_rate);
     }
     
-    nsamples = wave->num_samples;
+    /* nsamples = wave->num_samples; */
     int sample_size = strcmp(format_str, "l16") == 0 ? 2 : 1;
     int frame_samples = sample_rate * frame_duration / 1000;
     
@@ -77,6 +77,7 @@ pyaudio_tts(PyObject* self, PyObject* args, PyObject* kwargs)
         frame_samples = wave->num_samples;
     }
     
+	int i;
     char* data = (char*) calloc(sample_size, frame_samples);
     if (strcmp(format_str, "l16") == 0) {
         for (i=0; i<wave->num_samples; ++i) {
@@ -95,7 +96,7 @@ pyaudio_tts(PyObject* self, PyObject* args, PyObject* kwargs)
         }
     }
     
-    PyObject* output = PyString_FromStringAndSize(data, frame_samples * sample_size);
+    PyObject* output = PyBytes_FromStringAndSize(data, frame_samples * sample_size);
     free(data);
     return Py_BuildValue("N", output);
 }
@@ -113,15 +114,27 @@ static PyMethodDef Module_methods[] = {
     {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "audiotts",     /* m_name */
+        "portable audio text-to-speech module based on CMU's FLite project",  /* m_doc */
+        -1,                  /* m_size */
+        Module_methods,    /* m_methods */
+        NULL,                /* m_reload */
+        NULL,                /* m_traverse */
+        NULL,                /* m_clear */
+        NULL,                /* m_free */
+    };
 
 PyMODINIT_FUNC
 initaudiotts(void)
 {
     PyObject *m;
     
-    m = Py_InitModule3("audiotts", Module_methods, "portable audio text-to-speech module based on CMU's FLite project");
-    if (m == NULL)
-        return;
+    /* m = Py_InitModule3("audiotts", Module_methods, "portable audio text-to-speech module based on CMU's FLite project"); */
+	m = PyModule_Create(&moduledef);
+    if (m == NULL)		
+        return NULL;
 
     flite_init();
     
@@ -134,5 +147,6 @@ initaudiotts(void)
     ModuleError = PyErr_NewException("audiotts.error", NULL, NULL);
     Py_INCREF(ModuleError);
     PyModule_AddObject(m, "error", ModuleError);
+	return NULL;
 }
 

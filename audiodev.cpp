@@ -80,7 +80,7 @@ PyObject* format2strings(int format)
     PyObject *f = PyList_New(0);
     for (unsigned i=0; i<sizeof(codes)/sizeof(codes[0]); ++i) {
         if (format & codes[i]) {
-            PyList_Append(f, PyString_FromString(names[i]));
+            PyList_Append(f, PyBytes_FromString(names[i]));
         }
     }
     return f;
@@ -92,17 +92,17 @@ device2object(const RtAudio::DeviceInfo& info)
     PyObject* dev = PyDict_New();
     
     PyDict_SetItemString(dev, "probed", info.probed ? Py_True : Py_False);
-    PyDict_SetItemString(dev, "name", PyString_FromString(info.name.c_str()));
+    PyDict_SetItemString(dev, "name", PyBytes_FromString(info.name.c_str()));
     if (info.probed == true) {
-        PyDict_SetItemString(dev, "output_channels", PyInt_FromLong(info.outputChannels));
-        PyDict_SetItemString(dev, "input_channels", PyInt_FromLong(info.inputChannels));
-        PyDict_SetItemString(dev, "duplex_channels", PyInt_FromLong(info.duplexChannels));
+        PyDict_SetItemString(dev, "output_channels", PyLong_FromLong(info.outputChannels));
+        PyDict_SetItemString(dev, "input_channels", PyLong_FromLong(info.inputChannels));
+        PyDict_SetItemString(dev, "duplex_channels", PyLong_FromLong(info.duplexChannels));
         PyDict_SetItemString(dev, "is_default_output", info.isDefaultOutput ? Py_True : Py_False);
         PyDict_SetItemString(dev, "is_default_input", info.isDefaultInput ? Py_True : Py_False);
         
         PyObject *r = PyTuple_New(info.sampleRates.size());
         for (unsigned int j=0; j<info.sampleRates.size(); ++j) {
-            PyTuple_SetItem(r, j, PyInt_FromLong(info.sampleRates[j]));
+            PyTuple_SetItem(r, j, PyLong_FromLong(info.sampleRates[j]));
         }
         PyDict_SetItemString(dev, "sample_rates", r);
         PyDict_SetItemString(dev, "native_formats", format2strings(info.nativeFormats));
@@ -176,10 +176,10 @@ inout(void *output_buffer, void *input_buffer, unsigned int buffer_frames,
     
     PyObject* input = NULL;
     if (input_size > 0) {
-        input = PyString_FromStringAndSize((const char *)input_buffer, input_size);
+        input = PyBytes_FromStringAndSize((const char *)input_buffer, input_size);
     }
     else {
-        input = PyString_FromString("");
+        input = PyBytes_FromString("");
     }
         
     PyObject* arglist = Py_BuildValue("(OdO)", input, stream_time, callback_data.userdata);
@@ -188,10 +188,10 @@ inout(void *output_buffer, void *input_buffer, unsigned int buffer_frames,
     Py_XDECREF(arglist);
     
     if (output != NULL) {
-        if (PyString_Check(output)) {
-            unsigned int new_size = PyString_Size(output);
+        if (PyBytes_Check(output)) {
+            unsigned int new_size = PyBytes_Size(output);
             if (output_size > 0 && new_size > 0) {
-                memcpy(output_buffer, PyString_AsString(output), new_size < output_size ? new_size : output_size);
+                memcpy(output_buffer, PyBytes_AsString(output), new_size < output_size ? new_size : output_size);
             } else {
                 memset(output_buffer, 0, output_size);
             }
@@ -398,8 +398,18 @@ static PyMethodDef Module_methods[] = {
     {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
-
-
+/* http://python3porting.com/cextensions.html#module-initialization */
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "audiodev",     /* m_name */
+        "portable audio device module based on the RtAudio project",  /* m_doc */
+        -1,                  /* m_size */
+        Module_methods,    /* m_methods */
+        NULL,                /* m_reload */
+        NULL,                /* m_traverse */
+        NULL,                /* m_clear */
+        NULL,                /* m_free */
+    };
 
 PyMODINIT_FUNC
 initaudiodev(void)
@@ -408,9 +418,10 @@ initaudiodev(void)
     
     PyEval_InitThreads();
 
-    m = Py_InitModule3("audiodev", Module_methods, "portable audio device module based on the RtAudio project");
+    /* m = Py_InitModule3("audiodev", Module_methods, "portable audio device module based on the RtAudio project"); */
+	m = PyModule_Create(&moduledef);
     if (m == NULL)
-        return;
+        return NULL;
 
     _rtaudio = new RtAudio();
     

@@ -2,6 +2,7 @@
 #include <structmember.h>
 #include <string.h>
 
+/* https://github.com/Noxet/pcapy/commit/f4d87c0c8d2c9b897ef1b15a59bbcb55d3a0cced */
 
 extern "C" {
     #include "speex/speex.h"
@@ -61,7 +62,7 @@ State_dealloc(State* self)
     }
     
     //printf("------- destroyed codec context of type %d\n", self->type);
-    self->ob_type->tp_free((PyObject*) self);
+    Py_TYPE(self)->tp_free((PyObject*) self);
 }
 
 static PyObject *
@@ -81,48 +82,48 @@ State_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 
 
 static PyTypeObject StateType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
-    "audiospeex.State",        /*tp_name*/
-    sizeof(State),             /*tp_basicsize*/
-    0,                         /*tp_itemsize*/
-    (destructor)State_dealloc, /*tp_dealloc*/
-    0,                         /*tp_print*/
-    0,                         /*tp_getattr*/
-    0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
-    0,                         /*tp_repr*/
-    0,                         /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
-    0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
-    0,                         /*tp_call*/
-    0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
-    0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "Internal state objects",  /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
-    0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
-    0,                         /* tp_methods */
-    0,                         /* tp_members */
-    0,                         /* tp_getset */
-    0,                         /* tp_base */
-    0,                         /* tp_dict */
-    0,                         /* tp_descr_get */
-    0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    0,                         /* tp_init */
-    0,                         /* tp_alloc */
-    State_new,                 /* tp_new */
+    PyObject_HEAD_INIT(NULL)	
+    .tp_name = "audiospeex.State",        /**/	
+    .tp_basicsize = sizeof(State),             /**/	
+    .tp_itemsize = 0,                         /**/	
+    .tp_dealloc = (destructor)State_dealloc, /**/	
+    .tp_print = 0,                         /**/
+    .tp_getattr = 0,                         /**/
+    .tp_setattr = 0,                         /**/
+    .tp_as_async = 0,                     /**/
+    .tp_repr = 0,                         /**/
+    .tp_as_number = 0,                         /**/
+    .tp_as_sequence = 0,                         /**/
+    .tp_as_mapping = 0,                         /**/
+    .tp_hash = 0,                         /* */
+    .tp_call = 0,                         /**/
+    .tp_str = 0,                         /**/
+    .tp_getattro = 0,                         /**/
+    .tp_setattro = 0,                         /**/
+    .tp_as_buffer = 0,                         /**/
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /**/
+    .tp_doc = "Internal state objects",  /*  */
+    .tp_traverse = 0,		               /*  */
+    .tp_clear = 0,		               /*  */
+    .tp_richcompare = 0,		               /*  */
+    .tp_weaklistoffset = 0,		               /*  */
+    .tp_iter = 0,		               /*  */
+    .tp_iternext = 0,		               /*  */
+    .tp_methods = 0,                         /*  */
+    .tp_members = 0,                         /*  */
+    .tp_getset = 0,                         /*  */
+    .tp_base = 0,                         /*  */
+    .tp_dict = 0,                         /*  */
+    .tp_descr_get = 0,                         /*  */
+    .tp_descr_set = 0,                         /*  */
+    .tp_dictoffset = 0,                         /*  */
+    .tp_init = 0,                         /*  */
+    .tp_alloc = 0,
+    .tp_new = PyType_GenericNew,	/*  */							
 };
 
 
+/* tp_new State_new, */
 
 static PyObject*
 pyaudio_lin2speex(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -163,14 +164,14 @@ pyaudio_lin2speex(PyObject* self, PyObject* args, PyObject* kwargs)
         Py_XINCREF(state);
     }
     
-    short* input_frame = (short*) PyString_AsString(input);
+    short* input_frame = (short*) PyBytes_AsString(input);
     speex_bits_reset(&((State*)state)->bits);
     speex_encode_int(((State*)state)->value, input_frame, &((State*)state)->bits);
 
     int output_size = speex_bits_nbytes(&((State*)state)->bits);
     char output_bytes[output_size];
     output_size = speex_bits_write(&((State*)state)->bits, output_bytes, output_size);
-    PyObject* output = PyString_FromStringAndSize(output_bytes, output_size);
+    PyObject* output = PyBytes_FromStringAndSize(output_bytes, output_size);
     return Py_BuildValue("(NN)", output, state);
 }
 
@@ -214,8 +215,8 @@ pyaudio_speex2lin(PyObject* self, PyObject* args, PyObject* kwargs)
         Py_XINCREF(state);
     }
     
-    char* input_bytes = PyString_AsString(input);
-    unsigned int input_size = PyString_Size(input);
+    char* input_bytes = PyBytes_AsString(input);
+    unsigned int input_size = PyBytes_Size(input);
     speex_bits_read_from(&((State*)state)->bits, input_bytes, input_size);
     
     int frame_size = 0;
@@ -227,7 +228,7 @@ pyaudio_speex2lin(PyObject* self, PyObject* args, PyObject* kwargs)
     
     short output_frame[frame_size];
     speex_decode_int(((State*)state)->value, &((State*)state)->bits, output_frame);
-    PyObject* output = PyString_FromStringAndSize((char*) output_frame, frame_size * 2);
+    PyObject* output = PyBytes_FromStringAndSize((char*) output_frame, frame_size * 2);
     return Py_BuildValue("(NN)", output, state);
 }
 
@@ -274,14 +275,14 @@ pyaudio_resample(PyObject* self, PyObject* args, PyObject* kwargs)
         Py_XINCREF(state);
     }
     
-    short* input_bytes = (short*) PyString_AsString(input);
-    unsigned int input_size = PyString_Size(input) / 2;
+    short* input_bytes = (short*) PyBytes_AsString(input);
+    unsigned int input_size = PyBytes_Size(input) / 2;
     unsigned int output_size = input_size * output_rate / input_rate + 100;
     short output_bytes[output_size];
     
     speex_resampler_process_int((SpeexResamplerState*)(((State*)state)->value), 0, input_bytes, &input_size, output_bytes, &output_size);
     
-    PyObject* output = PyString_FromStringAndSize((char*) output_bytes, output_size * 2);
+    PyObject* output = PyBytes_FromStringAndSize((char*) output_bytes, output_size * 2);
     return Py_BuildValue("(NN)", output, state);
 }
 
@@ -325,14 +326,14 @@ pyaudio_preprocess(PyObject* self, PyObject* args, PyObject* kwargs)
         Py_XINCREF(state);
     }
     
-    short* input_bytes = (short*) PyString_AsString(input);
-    unsigned int output_size = PyString_Size(input) / 2;
+    short* input_bytes = (short*) PyBytes_AsString(input);
+    unsigned int output_size = PyBytes_Size(input) / 2;
     short output_bytes[output_size];
     memcpy(output_bytes, input_bytes, output_size * 2);
     
     speex_preprocess_run((SpeexPreprocessState*)(((State*)state)->value), output_bytes);
     
-    PyObject* output = PyString_FromStringAndSize((char*) output_bytes, output_size * 2);
+    PyObject* output = PyBytes_FromStringAndSize((char*) output_bytes, output_size * 2);
     return Py_BuildValue("(NN)", output, state);
 }
 
@@ -377,14 +378,14 @@ pyaudio_cancel_echo(PyObject* self, PyObject* args, PyObject* kwargs)
         Py_XINCREF(state);
     }
     
-    short* input_bytes = (short*) PyString_AsString(input);
-    short* echo_bytes = (short*) PyString_AsString(echo);
-    unsigned int output_size = PyString_Size(input) / 2;
+    short* input_bytes = (short*) PyBytes_AsString(input);
+    short* echo_bytes = (short*) PyBytes_AsString(echo);
+    unsigned int output_size = PyBytes_Size(input) / 2;
     short output_bytes[output_size];
 
     speex_echo_cancellation((SpeexEchoState*)(((State*)state)->value), input_bytes, echo_bytes, output_bytes);    
     
-    PyObject* output = PyString_FromStringAndSize((char*) output_bytes, output_size * 2);
+    PyObject* output = PyBytes_FromStringAndSize((char*) output_bytes, output_size * 2);
     return Py_BuildValue("(NN)", output, state);
 }
 
@@ -404,6 +405,17 @@ static PyMethodDef Module_methods[] = {
     {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "audiospeex",     /* m_name */
+        "speex voice codec and quality engine based on the open source speex library",  /* m_doc */
+        -1,                  /* m_size */
+        Module_methods,    /* m_methods */
+        NULL,                /* m_reload */
+        NULL,                /* m_traverse */
+        NULL,                /* m_clear */
+        NULL,                /* m_free */
+    };
 
 PyMODINIT_FUNC
 initaudiospeex(void)
@@ -412,11 +424,12 @@ initaudiospeex(void)
     
     StateType.tp_new = PyType_GenericNew;
     if (PyType_Ready(&StateType) < 0)
-        return;
+        return NULL;
     
-    m = Py_InitModule3("audiospeex", Module_methods, "speex voice codec and quality engine based on the open source speex library");
+    /* m = Py_InitModule3("audiospeex", Module_methods, "speex voice codec and quality engine based on the open source speex library"); */
+	m = PyModule_Create(&moduledef);
     if (m == NULL)
-        return;
+        return NULL;
 
     ModuleError = PyErr_NewException((char*) "audiospeex.error", NULL, NULL);
     Py_INCREF(ModuleError);
@@ -424,5 +437,6 @@ initaudiospeex(void)
     
     Py_INCREF(&StateType);
     PyModule_AddObject(m, "State", (PyObject *)&StateType);
+	return NULL;
 }
 
