@@ -1,3 +1,8 @@
+STATUS: Actually 'setup.py' builds without errors but having trouble importing the modules  
+SO  
+NOT TESTED  
+
+
 # Python bindings for audio device and speex codecs #
 
 > This project was migrated from <https://code.google.com/p/py-audio> on May 17, 2015  
